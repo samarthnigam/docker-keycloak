@@ -1,0 +1,15 @@
+<infinispan xmlns="urn:infinispan:config:13.0">
+    <local-cache name="sessions">
+        <configuration>
+            <eviction strategy="LRU" max-entries="10000" />
+            <memory>
+                <size ratio="0.75"/>
+            </memory>
+            <segments>512</segments> <!-- Number of segments for Infinispan caches -->
+            <cache-store>
+                <shared>false</shared>
+            </cache-store>
+        </configuration>
+</local-cache>
+<!--sample!-->
+</infinispan>
