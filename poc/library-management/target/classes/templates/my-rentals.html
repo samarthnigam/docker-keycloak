@@ -1,0 +1,107 @@
+<div th:fragment="my-rentals">
+    <div class="row">
+        <div class="col-md-12">
+            <h2><i class="fas fa-shopping-cart"></i> My Book Rentals</h2>
+
+            <!-- Success/Error Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Active Rentals -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-clock"></i> Currently Rented Books</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Author</th>
+                                    <th>Rental Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="rental : ${rentals}" th:if="${rental.status.name()} == 'ACTIVE'">
+                                    <td th:text="${rental.book.title}">Title</td>
+                                    <td th:text="${rental.book.author}">Author</td>
+                                    <td th:text="${#temporals.format(rental.rentalDate, 'yyyy-MM-dd')}">Rental Date</td>
+                                    <td th:text="${#temporals.format(rental.dueDate, 'yyyy-MM-dd')}">Due Date</td>
+                                    <td>
+                                        <span th:class="'badge ' + (${rental.status.name()} == 'ACTIVE' ? 'bg-primary' : ${rental.status.name()} == 'OVERDUE' ? 'bg-danger' : 'bg-success')"
+                                              th:text="${rental.status}">Status</span>
+                                    </td>
+                                    <td>
+                                        <form th:action="@{'/rentals/return/' + ${rental.id}}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-warning"
+                                                    onclick="return confirm('Are you sure you want to return this book?')">
+                                                <i class="fas fa-undo"></i> Return Book
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div th:if="${rentals.stream().filter(r -> r.status.name() == 'ACTIVE').toList().isEmpty()}" class="text-center mt-4">
+                        <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                        <h5>No active rentals</h5>
+                        <p class="text-muted">You don't have any books currently rented.</p>
+                        <a href="/books" class="btn btn-primary">Browse Books</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rental History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-history"></i> Rental History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Author</th>
+                                    <th>Rental Date</th>
+                                    <th>Return Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="rental : ${rentals}" th:if="${rental.status.name()} != 'ACTIVE'">
+                                    <td th:text="${rental.book.title}">Title</td>
+                                    <td th:text="${rental.book.author}">Author</td>
+                                    <td th:text="${#temporals.format(rental.rentalDate, 'yyyy-MM-dd')}">Rental Date</td>
+                                    <td th:text="${rental.returnDate != null ? #temporals.format(rental.returnDate, 'yyyy-MM-dd') : 'Not returned'}">Return Date</td>
+                                    <td>
+                                        <span th:class="'badge ' + (${rental.status.name()} == 'RETURNED' ? 'bg-success' : 'bg-secondary')"
+                                              th:text="${rental.status}">Status</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div th:if="${rentals.stream().filter(r -> r.status.name() != 'ACTIVE').toList().isEmpty()}" class="text-center mt-4">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h5>No rental history</h5>
+                        <p class="text-muted">Your completed rentals will appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

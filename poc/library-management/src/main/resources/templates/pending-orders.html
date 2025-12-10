@@ -1,0 +1,71 @@
+<div th:fragment="pending-orders">
+    <div class="row">
+        <div class="col-md-12">
+            <h2><i class="fas fa-clock"></i> Pending Book Orders</h2>
+
+            <!-- Success/Error Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Pending Orders -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> Orders Awaiting Approval</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>ISBN</th>
+                                    <th>Requested By</th>
+                                    <th>Request Date</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="order : ${orders}">
+                                    <td th:text="${order.title}">Title</td>
+                                    <td th:text="${order.author}">Author</td>
+                                    <td th:text="${order.isbn}">ISBN</td>
+                                    <td th:text="${order.requestedBy}">Requester</td>
+                                    <td th:text="${#temporals.format(order.requestDate, 'yyyy-MM-dd HH:mm')}">Date</td>
+                                    <td>
+                                        <span th:text="${order.description != null and order.description.length() > 50 ? order.description.substring(0, 50) + '...' : order.description}">Description</span>
+                                    </td>
+                                    <td>
+                                        <form th:action="@{'/orders/' + ${order.id} + '/approve'}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-success me-1">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
+                                        <form th:action="@{'/orders/' + ${order.id} + '/reject'}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(orders)}" class="text-center mt-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5>No pending orders</h5>
+                        <p class="text-muted">All book requests have been processed.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

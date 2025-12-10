@@ -1,0 +1,106 @@
+<div th:fragment="orders">
+    <div class="row">
+        <div class="col-md-12">
+            <h2><i class="fas fa-plus-circle"></i> Book Orders</h2>
+
+            <!-- Success/Error Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Request New Book Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-plus"></i> Request New Book</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/orders}" th:object="${bookOrder}" method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="title" class="form-label">Title *</label>
+                                <input type="text" class="form-control" id="title" th:field="*{title}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="author" class="form-label">Author *</label>
+                                <input type="text" class="form-control" id="author" th:field="*{author}" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="isbn" class="form-label">ISBN *</label>
+                            <input type="text" class="form-control" id="isbn" th:field="*{isbn}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" th:field="*{description}" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Submit Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- My Orders -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> My Book Requests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>ISBN</th>
+                                    <th>Status</th>
+                                    <th>Request Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="order : ${orders}">
+                                    <td th:text="${order.title}">Title</td>
+                                    <td th:text="${order.author}">Author</td>
+                                    <td th:text="${order.isbn}">ISBN</td>
+                                    <td>
+                                        <span th:class="'badge ' + (${order.status.name()} == 'PENDING' ? 'bg-warning' : ${order.status.name()} == 'APPROVED' ? 'bg-success' : ${order.status.name()} == 'REJECTED' ? 'bg-danger' : 'bg-info')"
+                                              th:text="${order.status}">Status</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(order.requestDate, 'yyyy-MM-dd')}">Date</td>
+                                    <td>
+                                        <button th:if="${order.status.name()} == 'PENDING'" class="btn btn-sm btn-outline-danger"
+                                                onclick="cancelOrder(this)" th:data-id="${order.id}">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(orders)}" class="text-center mt-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No book requests yet</h5>
+                        <p class="text-muted">Submit your first book request using the form above.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelOrder(button) {
+    if (confirm('Are you sure you want to cancel this book request?')) {
+        const orderId = button.getAttribute('data-id');
+        // Implementation for canceling orders would go here
+        alert('Cancel functionality would be implemented here');
+    }
+}
+</script>

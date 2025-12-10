@@ -1,0 +1,51 @@
+<div th:fragment="rentals">
+    <div class="row">
+        <div class="col-md-12">
+            <h2><i class="fas fa-list"></i> All Book Rentals</h2>
+
+            <!-- Rentals List -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-book"></i> Rental Records</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Author</th>
+                                    <th>Rented By</th>
+                                    <th>Rental Date</th>
+                                    <th>Due Date</th>
+                                    <th>Return Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="rental : ${rentals}">
+                                    <td th:text="${rental.book.title}">Title</td>
+                                    <td th:text="${rental.book.author}">Author</td>
+                                    <td th:text="${rental.username}">User</td>
+                                    <td th:text="${#temporals.format(rental.rentalDate, 'yyyy-MM-dd')}">Rental Date</td>
+                                    <td th:text="${#temporals.format(rental.dueDate, 'yyyy-MM-dd')}">Due Date</td>
+                                    <td th:text="${rental.returnDate != null ? #temporals.format(rental.returnDate, 'yyyy-MM-dd') : 'Not returned'}">Return Date</td>
+                                    <td>
+                                        <span th:class="'badge ' + (${rental.status.name()} == 'ACTIVE' ? 'bg-primary' : ${rental.status.name()} == 'RETURNED' ? 'bg-success' : ${rental.status.name()} == 'OVERDUE' ? 'bg-danger' : 'bg-secondary')"
+                                              th:text="${rental.status}">Status</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(rentals)}" class="text-center mt-4">
+                        <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                        <h5>No rental records</h5>
+                        <p class="text-muted">No books have been rented yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -12,7 +12,7 @@ x-kong-config:
   KC_DB_URL_HOST: db
 
 volumes:
-  keycloakdb: 
+  keycloakdb:
     driver: local
     driver_opts:
       type: none
@@ -39,32 +39,24 @@ services:
     ports:
       - '5432:5432'
     healthcheck:
-      test:
-         [
-          "CMD",
-          "pg_isready",
-          "-d",
-          "${KC_DB_SCHEMA:-keycloak}",
-          "-U",
-          "${KC_DB_USERNAME:-keycloak}"
-        ]
+      test: [ "CMD", "pg_isready", "-d", "${KC_DB_SCHEMA:-keycloak}", "-U", "${KC_DB_USERNAME:-keycloak}" ]
       interval: 30s
       timeout: 30s
       retries: 3
     restart: 'no'
     stdin_open: true
     tty: true
+    #network_mode: host
     networks:
       - local_sams_shared_testing_network
     volumes:
       - 'keycloakdb:/var/lib/postgresql/data'
       - '/home/samarthnigam/projects/docker-keycloak/keycloak-init-user-db.sh:/docker-entrypoint-initdb.d/keycloak-init-user-db.sh'
-      
 
   keycloak:
     container_name: keycloak
     depends_on:
-      db: 
+      db:
         condition: service_healthy
     ports:
       - '8081:8080'
@@ -91,24 +83,24 @@ services:
       - KC_METRICS_ENABLED=true
       - KEYCLOAK_INFINISPAN_CONFIG_FILE=/opt/keycloak/conf/infinispan.xml
       - KC_HTTP_MANAGEMENT_PORT=9000
-    image: 'quay.io/keycloak/keycloak:25.0'
+    image: 'quay.io/keycloak/keycloak:26.4.6'
     command: start-dev --spi-theme-static-max-age=-1 --spi-theme-cache-themes=false --spi-theme-cache-templates=false
     networks:
       - local_sams_shared_testing_network
     volumes:
       - '/home/samarthnigam/projects/docker-keycloak/config:/opt/keycloak/conf'
       - '/home/samarthnigam/projects/docker-keycloak/themes:/opt/keycloak/themes'
-  
+
   adminer:
     container_name: adminer
     image: adminer
     restart: 'no'
     ports:
       - 8080:8080
+    #network_mode: host
     networks:
       - local_sams_shared_testing_network
 
 secrets:
   keycloak_postgres_password:
     file: /home/samarthnigam/projects/docker-keycloak/POSTGRES_PASSWORD
-    
