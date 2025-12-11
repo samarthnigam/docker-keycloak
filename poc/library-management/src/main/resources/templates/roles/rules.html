@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Permission Rules</title>
+    <style>
+        .rule-card {
+            transition: transform 0.2s;
+        }
+        .rule-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .rule-type-allow {
+            border-left: 4px solid #28a745;
+        }
+        .rule-type-deny {
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-gavel"></i> Permission Rules</h2>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRuleModal">
+                            <i class="fas fa-plus"></i> Create New Rule
+                        </button>
+                    </div>
+
+                    <!-- Rules List -->
+                    <div class="row" id="rulesContainer">
+                        <div class="col-12">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Rule Modal -->
+        <div class="modal fade" id="createRuleModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Create Permission Rule</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="createRuleForm">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="ruleType" class="form-label">Rule Type *</label>
+                                <select class="form-select" id="ruleType" name="ruleType" required>
+                                    <option value="">Select rule type</option>
+                                    <option value="ALLOW">Allow - Grant permission</option>
+                                    <option value="DENY">Deny - Block permission</option>
+                                </select>
+                                <div class="form-text">Deny rules override allow rules</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="userId" class="form-label">User ID</label>
+                                        <input type="number" class="form-control" id="userId" name="userId" placeholder="Leave empty for all users">
+                                        <div class="form-text">Specific user ID or leave empty to apply to all users</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="roleId" class="form-label">Role ID</label>
+                                        <input type="number" class="form-control" id="roleId" name="roleId" placeholder="Leave empty for all roles">
+                                        <div class="form-text">Specific role ID or leave empty to apply to all roles</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="resourceType" class="form-label">Resource Type *</label>
+                                        <select class="form-select" id="resourceType" name="resourceType" required>
+                                            <option value="">Select resource type</option>
+                                            <option value="BOOK">Book</option>
+                                            <option value="USER">User</option>
+                                            <option value="ORDER">Order</option>
+                                            <option value="RENTAL">Rental</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="resourceId" class="form-label">Resource ID</label>
+                                        <input type="number" class="form-control" id="resourceId" name="resourceId" placeholder="Leave empty for all resources">
+                                        <div class="form-text">Specific resource ID or leave empty to apply to all resources of this type</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="permission" class="form-label">Permission *</label>
+                                <input type="text" class="form-control" id="permission" name="permission" required placeholder="e.g., READ_BOOK, CREATE_USER">
+                                <div class="form-text">The permission this rule applies to</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="ruleDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="ruleDescription" name="description" rows="2" placeholder="Optional description of this rule"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="conditions" class="form-label">Additional Conditions (JSON)</label>
+                                <textarea class="form-control" id="conditions" name="conditions" rows="3" placeholder='{"key": "value"}'></textarea>
+                                <div class="form-text">Optional JSON conditions for complex rules</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Rule</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Rule Modal -->
+        <div class="modal fade" id="editRuleModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Permission Rule</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="editRuleForm">
+                        <input type="hidden" id="editRuleId" name="id">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="editRuleType" class="form-label">Rule Type *</label>
+                                <select class="form-select" id="editRuleType" name="ruleType" required>
+                                    <option value="ALLOW">Allow - Grant permission</option>
+                                    <option value="DENY">Deny - Block permission</option>
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editUserId" class="form-label">User ID</label>
+                                        <input type="number" class="form-control" id="editUserId" name="userId">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editRoleId" class="form-label">Role ID</label>
+                                        <input type="number" class="form-control" id="editRoleId" name="roleId">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editResourceType" class="form-label">Resource Type *</label>
+                                        <select class="form-select" id="editResourceType" name="resourceType" required>
+                                            <option value="BOOK">Book</option>
+                                            <option value="USER">User</option>
+                                            <option value="ORDER">Order</option>
+                                            <option value="RENTAL">Rental</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editResourceId" class="form-label">Resource ID</label>
+                                        <input type="number" class="form-control" id="editResourceId" name="resourceId">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editPermission" class="form-label">Permission *</label>
+                                <input type="text" class="form-control" id="editPermission" name="permission" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editRuleDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="editRuleDescription" name="description" rows="2"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editConditions" class="form-label">Additional Conditions (JSON)</label>
+                                <textarea class="form-control" id="editConditions" name="conditions" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Rule</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Load rules on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRules();
+        });
+
+        // Load all rules
+        function loadRules() {
+            fetch('/api/permission-rules', {
+                headers: {
+                    'Authorization': 'Bearer ' + getToken()
+                }
+            })
+            .then(response => response.json())
+            .then(rules => {
+                displayRules(rules);
+            })
+            .catch(error => {
+                console.error('Error loading rules:', error);
+                showAlert('Error loading permission rules', 'danger');
+            });
+        }
+
+        // Display rules in list
+        function displayRules(rules) {
+            const container = document.getElementById('rulesContainer');
+            if (rules.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-gavel fa-3x mb-3"></i>
+                            <h5>No permission rules found</h5>
+                            <p>Create specific rules to override default permissions for users or resources.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = rules.map(rule => `
+                <div class="col-12 mb-3">
+                    <div class="card rule-card ${rule.ruleType === 'ALLOW' ? 'rule-type-allow' : 'rule-type-deny'}">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge ${rule.ruleType === 'ALLOW' ? 'bg-success' : 'bg-danger'} me-2">${rule.ruleType}</span>
+                                <strong>${rule.permission}</strong> on <em>${rule.resourceType}${rule.resourceId ? ` #${rule.resourceId}` : ' (all)'}</em>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="editRule(${rule.id})"><i class="fas fa-edit"></i> Edit</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteRule(${rule.id})"><i class="fas fa-trash"></i> Delete</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>User:</strong> ${rule.userId ? `ID ${rule.userId}` : 'All users'}</p>
+                                    <p class="mb-1"><strong>Role:</strong> ${rule.roleId ? `ID ${rule.roleId}` : 'All roles'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Resource:</strong> ${rule.resourceType}${rule.resourceId ? ` #${rule.resourceId}` : ' (all)'}</p>
+                                    <p class="mb-1"><strong>Permission:</strong> ${rule.permission}</p>
+                                </div>
+                            </div>
+                            ${rule.description ? `<p class="mt-2 mb-0"><em>${rule.description}</em></p>` : ''}
+                            ${rule.conditions ? `<p class="mt-2 mb-0 text-muted"><small>Conditions: ${rule.conditions}</small></p>` : ''}
+                        </div>
+                        <div class="card-footer text-muted">
+                            <small>Created: ${new Date(rule.createdAt).toLocaleDateString()}</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Create rule form submission
+        document.getElementById('createRuleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const ruleData = {
+                ruleType: formData.get('ruleType'),
+                userId: formData.get('userId') ? parseInt(formData.get('userId')) : null,
+                roleId: formData.get('roleId') ? parseInt(formData.get('roleId')) : null,
+                resourceType: formData.get('resourceType'),
+                resourceId: formData.get('resourceId') ? parseInt(formData.get('resourceId')) : null,
+                permission: formData.get('permission'),
+                description: formData.get('description') || null,
+                conditions: formData.get('conditions') || null
+            };
+
+            // Parse conditions JSON if provided
+            if (ruleData.conditions) {
+                try {
+                    ruleData.conditions = JSON.parse(ruleData.conditions);
+                } catch (error) {
+                    showAlert('Invalid JSON in conditions field', 'danger');
+                    return;
+                }
+            }
+
+            fetch('/api/permission-rules', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + getToken()
+                },
+                body: JSON.stringify(ruleData)
+            })
+            .then(response => response.json())
+            .then(rule => {
+                showAlert('Permission rule created successfully', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('createRuleModal')).hide();
+                e.target.reset();
+                loadRules();
+            })
+            .catch(error => {
+                console.error('Error creating rule:', error);
+                showAlert('Error creating permission rule', 'danger');
+            });
+        });
+
+        // Edit rule
+        function editRule(ruleId) {
+            fetch(`/api/permission-rules/${ruleId}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + getToken()
+                }
+            })
+            .then(response => response.json())
+            .then(rule => {
+                document.getElementById('editRuleId').value = rule.id;
+                document.getElementById('editRuleType').value = rule.ruleType;
+                document.getElementById('editUserId').value = rule.userId || '';
+                document.getElementById('editRoleId').value = rule.roleId || '';
+                document.getElementById('editResourceType').value = rule.resourceType;
+                document.getElementById('editResourceId').value = rule.resourceId || '';
+                document.getElementById('editPermission').value = rule.permission;
+                document.getElementById('editRuleDescription').value = rule.description || '';
+                document.getElementById('editConditions').value = rule.conditions ? JSON.stringify(rule.conditions, null, 2) : '';
+
+                new bootstrap.Modal(document.getElementById('editRuleModal')).show();
+            })
+            .catch(error => {
+                console.error('Error loading rule:', error);
+                showAlert('Error loading permission rule', 'danger');
+            });
+        }
+
+        // Edit rule form submission
+        document.getElementById('editRuleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const ruleId = document.getElementById('editRuleId').value;
+            const formData = new FormData(e.target);
+            const ruleData = {
+                ruleType: formData.get('ruleType'),
+                userId: formData.get('userId') ? parseInt(formData.get('userId')) : null,
+                roleId: formData.get('roleId') ? parseInt(formData.get('roleId')) : null,
+                resourceType: formData.get('resourceType'),
+                resourceId: formData.get('resourceId') ? parseInt(formData.get('resourceId')) : null,
+                permission: formData.get('permission'),
+                description: formData.get('description') || null,
+                conditions: formData.get('conditions') || null
+            };
+
+            // Parse conditions JSON if provided
+            if (ruleData.conditions) {
+                try {
+                    ruleData.conditions = JSON.parse(ruleData.conditions);
+                } catch (error) {
+                    showAlert('Invalid JSON in conditions field', 'danger');
+                    return;
+                }
+            }
+
+            fetch(`/api/permission-rules/${ruleId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + getToken()
+                },
+                body: JSON.stringify(ruleData)
+            })
+            .then(response => response.json())
+            .then(rule => {
+                showAlert('Permission rule updated successfully', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('editRuleModal')).hide();
+                loadRules();
+            })
+            .catch(error => {
+                console.error('Error updating rule:', error);
+                showAlert('Error updating permission rule', 'danger');
+            });
+        });
+
+        // Delete rule
+        function deleteRule(ruleId) {
+            if (confirm('Are you sure you want to delete this permission rule?')) {
+                fetch(`/api/permission-rules/${ruleId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken()
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showAlert('Permission rule deleted successfully', 'success');
+                        loadRules();
+                    } else {
+                        throw new Error('Failed to delete rule');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting rule:', error);
+                    showAlert('Error deleting permission rule', 'danger');
+                });
+            }
+        }
+
+        // Get JWT token from localStorage or session
+        function getToken() {
+            return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token') || '';
+        }
+
+        // Show alert messages
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

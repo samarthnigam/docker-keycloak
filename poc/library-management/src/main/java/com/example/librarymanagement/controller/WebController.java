@@ -179,6 +179,28 @@ public class WebController {
         return "redirect:/pending-orders";
     }
 
+    // Role Management Routes
+    @GetMapping("/roles")
+    @PreAuthorize("hasRole('admin') or hasRole('owner')")
+    public String roles(Model model) {
+        model.addAttribute("content", "roles/index");
+        return "layout";
+    }
+
+    @GetMapping("/roles/permissions")
+    @PreAuthorize("hasRole('admin') or hasRole('owner')")
+    public String permissions(Model model) {
+        model.addAttribute("content", "roles/permissions");
+        return "layout";
+    }
+
+    @GetMapping("/roles/rules")
+    @PreAuthorize("hasRole('admin') or hasRole('owner')")
+    public String permissionRules(Model model) {
+        model.addAttribute("content", "roles/rules");
+        return "layout";
+    }
+
     private String getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getName();
